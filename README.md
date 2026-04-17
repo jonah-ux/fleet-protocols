@@ -105,3 +105,96 @@ Views available via Supabase REST API:
 - **GitHub**: https://github.com/jonah-ux/fleet-protocols
 - **On disk**: `fleet-brain/protocols/` (mounted read-only in senate containers)
 - **Index**: `fleet-brain/protocols/PROTOCOL-INDEX.md`
+
+## Injection Mechanics (2026-04-16)
+
+Protocols are injected into agent context through **five surfaces** so that every
+code path an agent might take exposes them.
+
+### 1. Smart-proxy (runtime, every LLM call)
+
+`VPS:/home/ubuntu/.openclaw/workspace/tools/smart-proxy.js` prepends a
+~600-byte protocol snippet to every request's system message before forwarding
+to the upstream provider (claude-max, codex-pro, etc). Gated by
+`PROTOCOL_INJECTION` env var (default `true`). Disable: set
+`PROTOCOL_INJECTION=false` in the systemd user unit and `systemctl --user
+restart smart-proxy`.
+
+Verified round-trip: `curl -sX POST VPS:3480/v1/chat/completions ...` with a
+prompt asking the model to echo the first line of its system prompt returns
+`ASM FLEET PROTOCOLS (mandatory, not optional):` from both gpt-5.4-mini and
+claude-sonnet-4-6 providers.
+
+The snippet is a const at the top of `routeRequest`:
+
+```
+ASM FLEET PROTOCOLS (mandatory, not optional):
+- "Done" claim -> PREFLIGHT + log fn_log_ship_check
+- "Blocker/missing" claim -> BLOCKER-CHECK + log fn_log_blocker_check
+- Any number reported -> DATA-TRUST + log fn_log_data_trust
+- Bulk op >100 rows -> SAMPLE-CHECK + log fn_log_sample_check
+Log via POST https://zgexrnpctugtwwssbkss.supabase.co/rest/v1/rpc/<fn> with
+service_role_key. Skipping logs shows up as DELINQUENT in
+v_protocol_compliance_live.
+```
+
+### 2. Claude Code settings hook (per-session compliance check)
+
+`~/.claude/hooks/session-end-protocol-check.sh` runs at SessionEnd on every
+m5 + m4 Claude Code session. It counts `protocol_runs` rows for this
+session's agent in the last hour — if 0 AND the session had >=3 ops_logs
+rows (i.e. it actually did work), it emits an `agent_ops_logs` row with
+`action=protocol_compliance_failure`. Those rows surface in
+`v_protocol_compliance_live` as `DELINQUENT`.
+
+### 3. Codex AGENTS.md (per-session context)
+
+`~/.codex/AGENTS.md` + `~/.codex/instructions.md` on m5 + VPS +
+codex-jarvis-home now include the protocol snippet. Every Codex CLI session
+starts with it in context.
+
+### 4. Cursor .cursorrules (per-workspace)
+
+`.cursorrules` created/updated in:
+- `~/Jonah-Projects/northstar-homebase/`
+- `~/Jonah-Projects/senate-agents/`
+- `~/Jonah-Projects/` (root)
+- `~/fleet-brain/`
+- `/home/ubuntu/senate/` (VPS)
+
+### 5. fleet-brain-loader (senate containers)
+
+Already shipped in `fleet-brain-loader` v2 (commit 4fbb949). Injects the
+full protocol text into every senate agent's prompt at runtime. Lands on
+next container restart.
+
+## Compliance Dashboard
+
+View: `public.v_protocol_compliance_live` in fleet Supabase. Status bands:
+
+| Band | Meaning |
+|------|---------|
+| `DELINQUENT` | 0 protocol_runs in 24h despite active ops |
+| `POOR` | <30% of ops logged a protocol |
+| `OK` | 30-70% coverage |
+| `GOOD` | >=70% coverage |
+| `LOGS_ONLY` | Protocol runs but no ops activity (pure reporter) |
+
+Query:
+```bash
+curl -s "$SUPABASE_URL/rest/v1/v_protocol_compliance_live?select=*&limit=20" \
+  -H "apikey: $KEY" -H "Authorization: Bearer $KEY" | jq
+```
+
+## Honest limitations (2026-04-16)
+
+- **Smart-proxy only covers agents routed through it.** ~60% of fleet LLM
+  traffic routes through VPS:3480 (senate, most PM2 pollers, friday DM).
+  Claude Code sessions on m5/m4 don't go through smart-proxy — they use
+  claude.ai direct. That's why surfaces 2-5 exist.
+- **Injection is context, not enforcement.** The model can still ignore
+  protocols. But the compliance view makes the ignoring visible, and that
+  pressure drives behavior.
+- **No automatic retroactive logging.** If an agent forgets to call
+  `fn_log_*`, nothing fixes that after the fact. The SessionEnd hook is
+  the only safety net, and it only fires on Claude Code sessions.
