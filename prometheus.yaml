@@ -1,0 +1,53 @@
+prometheus:
+  component_id: fleet-protocols
+  kind: protocol-library
+  owner: fleet
+  added: 2026-05-16T00:00:00.000Z
+  version: 2
+  description: >
+    Injectable cognitive protocol library for fleet agents: blocker checks, preflight, data trust, root-cause, handoff, and blast-radius gates.
+  source:
+    primary_entry: README.md
+    docs:
+      - README.md
+      - PREFLIGHT.md
+      - BLOCKER-CHECK.md
+      - ROOT-CAUSE.md
+      - DATA-TRUST.md
+      - SHIP-OR-SHAM.md
+      - docs/PROMETHEUS.md
+    tables:
+      - protocol_triggers
+  self_test:
+    command: bash -c 'cd /Users/jonahsnorthstar/Jonah-Projects/fleet-protocols && bash scripts/prometheus.sh test'
+    timeout_sec: 90
+    cadence: on_invoke
+    output_format: exit_code
+  self_document:
+    source_of_truth: /Users/jonahsnorthstar/Jonah-Projects/fleet-protocols/docs/PROMETHEUS.md
+    regenerate_cmd: bash scripts/prometheus.sh document
+    auto_update_cadence: on_change
+  self_correct:
+    tier: deterministic
+    command: bash -c 'cd /Users/jonahsnorthstar/Jonah-Projects/fleet-protocols && bash scripts/prometheus.sh correct'
+    cooldown_min: 30
+    max_attempts_per_hour: 2
+  self_learn:
+    enabled: true
+    telemetry_table: fleet_tool_brain_state
+    state_key_prefix: fleet-protocols
+    emit_cmd: bash scripts/prometheus.sh learn
+    capture:
+      - self_test_result
+      - doc_generation_result
+      - correction_result
+  cross_project:
+    consumes_from: []
+    produces_for:
+      - fleet-agents
+  hr_rules:
+    enforces:
+      - HR-67
+      - HR-126
+    violates_if:
+      - fleet-protocols loses a working self-test, self-document, self-correct, or self-learn path
