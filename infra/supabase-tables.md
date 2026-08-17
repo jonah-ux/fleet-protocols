@@ -7,59 +7,43 @@
 
 ## Tables we WRITE to
 
-### `<table-name>`
+None directly.
 
-- **DB:** fleet | portal
-- **Purpose:** <what this stores>
-- **Insert frequency:** <rate>
-- **Key columns:** `<col1, col2, ...>`
-- **RLS status:** <enabled | disabled | policies only>
-- **Freshness SLO:** <N minutes stale is acceptable>
-- **Schema:**
-  ```sql
-  <columns with types, or link to canonical migration>
-  ```
+This repository has no local runtime and no migrations. Downstream agents write protocol compliance rows to the fleet Supabase `protocol_runs` table; that write path belongs to the consuming agent, not this repo.
 
 ## Tables we READ from
 
-### `<table-name>`
+None during local validation.
 
-- **DB:** fleet | portal
-- **Owner:** <repo that writes it>
-- **Our usage:** <which code paths query it>
-- **Staleness tolerance:** <N minutes>
+README examples mention Supabase REST calls for operators and consumers, including reads from `protocol_triggers`, but `bash scripts/local-build.sh` performs no live database reads.
 
 ## Views we depend on
 
-### `<view-name>`
+None during local validation.
 
-- **DB:** fleet | portal
-- **Underlying tables:** <list>
-- **Is this authoritative?** <yes — trusted source | NO — placeholder data, do not trust>
-  - (If not authoritative: link to the authoritative source)
+Downstream dashboards use `v_protocol_compliance`, `v_protocol_compliance_live`, `v_blocker_accuracy`, `v_protocol_usage`, and `v_missing_preflights` as described in `README.md`.
 
 ## Migrations owned by this repo
 
 | File | Applied | Purpose |
 |------|---------|---------|
-| `migrations/YYYYMMDD_<name>.sql` | YYYY-MM-DD | <what it does> |
+| none | not applicable | This repo owns no Supabase migrations. |
 
 ## Known drift / schema issues
 
-- <Any column names that differ from convention — e.g., "gmail_message_id uses `gmail_` prefix but thread_id doesn't">
-- <Any tables in a weird state>
+- None known locally as of 2026-05-17.
+- The open source-of-truth question in `RELATIONSHIPS.md` remains a documentation/runtime propagation decision, not a schema drift issue.
 
 ## Verification
 
 ```bash
-# Check live schema matches:
-curl "https://zgexrnpctugtwwssbkss.supabase.co/rest/v1/?select=table_name&table_schema=eq.public" | \
-  jq '[.[]] | .[] | select(.table_name == "<name>")'
+# Project-local verification:
+bash scripts/local-build.sh
 ```
 
 ## When adding a new table
 
-1. Write migration in `migrations/YYYYMMDD_<name>.sql` with up/down
+1. Write migration in `migrations/YYYYMMDD_protocol_example.sql` with up/down
 2. Add entry here with full schema
 3. Update `related-repos.md` if another repo will consume this
 4. Commit migration + manifest in same commit
@@ -68,6 +52,6 @@ curl "https://zgexrnpctugtwwssbkss.supabase.co/rest/v1/?select=table_name&table_
 
 1. Add to `DEPRECATIONS.md` with 30-day hard-delete window
 2. Move entry in this file to a "DEPRECATED" section at the bottom
-3. Rename table to `_deprecated_<name>_YYYYMMDD` via migration
+3. Rename table to `_deprecated_protocol_example_YYYYMMDD` via migration
 4. Update any views that referenced it — re-point at replacement or remove
 5. Grep fleet for hardcoded references, update each

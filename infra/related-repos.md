@@ -2,52 +2,56 @@
 
 > **Bidirectional references.** If a repo appears here, YOU appear in THEIR `related-repos.md`. Keep both sides in sync.
 >
-> Use this file before changing any cross-cutting behavior — grep `<this-repo>` across all other `related-repos.md` files to find every consumer.
+> Use this file before changing any cross-cutting behavior. Relationship updates that require editing other repositories are L1-owned in this worker lane.
 
 ## Upstream (this repo CONSUMES)
 
-### `<repo-name>`
+### fleet-brain
 
-- **What we consume:** <table / API / function / event>
-- **How we consume it:** <code path in this repo>
-- **Freshness dependency:** <must be < N minutes stale>
-- **Degradation mode:** <what we do if upstream fails>
-- **Link:** `github.com/jonah-ux/<repo-name>`
+- **What we consume:** canonical protocol corpus and fleet doctrine references.
+- **How we consume it:** `RELATIONSHIPS.md`, `infra/AGENT-CONTEXT.md`, and operator handoff docs point at `../../fleet-brain/protocols/` as the current source-of-truth mirror.
+- **Freshness dependency:** no local build dependency; semantic changes must stay aligned before fleet rollout.
+- **Degradation mode:** if fleet-brain is unavailable, this repo can still run local validation, but L1 must resolve source-of-truth drift before external propagation.
+- **Link:** local sibling `../../fleet-brain/`
 
 ## Downstream (consumers of THIS repo)
 
-### `<repo-name>`
+### fleet-brain-loader and senate agents
 
-- **What they consume from us:** <table / API / function>
-- **Their code path:** <how they use it>
-- **Our SLO to them:** <freshness or uptime promise>
-- **Our notification obligation:** <must tell them if we break compatibility>
-- **Link:** `github.com/jonah-ux/<repo-name>`
+- **What they consume from us:** protocol markdown text and the README protocol index.
+- **Their code path:** fleet-brain-loader injects protocol text into agent context at runtime.
+- **Our SLO to them:** no broken filenames, no stale README mapping, and short protocol files stay under 80 lines.
+- **Our notification obligation:** any protocol add/rename/removal or semantic trigger change requires L1 coordination and downstream notification.
+- **Link:** see `infra/fleet-role.md` for the full consumer list.
+
+### Northstar Homebase compliance dashboards
+
+- **What they consume from us:** the logging contract described in `README.md` and `INJECTION-SNIPPET.md`.
+- **Their code path:** dashboards read fleet Supabase views such as `v_protocol_compliance_live`; agents write through `fn_log_*` RPCs.
+- **Our SLO to them:** do not change protocol names, RPC names, or argument semantics without coordinated migration.
+- **Our notification obligation:** L1 must notify dashboard owners before any logging-contract change.
+- **Link:** local sibling `../northstar-homebase/`
 
 ## Peers (coordinate, neither owns the other)
 
-### `<repo-name>`
-
-- **Shared resource:** <table, API, config we both touch>
-- **Ownership rule:** <who writes, who reads; how conflicts resolve>
-- **Coordination mechanism:** <CLAIMS.md lock, scheduled windows, mutual lock>
+None at this repository tier. `fleet-brain` is treated as upstream/source-of-truth, not a peer.
 
 ## External services (non-repo dependencies)
 
-### `<service-name>` (e.g., HubSpot API, Salesmsg, GHL)
+### Fleet Supabase
 
-- **Why we depend on it:** <feature>
-- **Fallback if down:** <behavior>
-- **Rate limits:** <known limits>
-- **Credentials:** <ref to env-vars.md>
-- **Docs:** <link>
+- **Why we depend on it:** downstream consumers log protocol runs through `fn_log_*` RPCs and read `protocol_triggers`.
+- **Fallback if down:** local repo validation still works; consumers should not block primary work solely because logging is temporarily unreachable.
+- **Rate limits:** consumer-owned; this repo performs no live Supabase calls in local validation.
+- **Credentials:** see `infra/env-vars.md`.
+- **Docs:** `README.md`, `INJECTION-SNIPPET.md`, and `infra/supabase-tables.md`.
 
 ## Cross-reference verification
 
 When editing this file:
 
 1. Add/update entry here
-2. Add/update the reciprocal entry in the OTHER repo's `related-repos.md`
+2. Add/update the reciprocal entry in the other repo's `related-repos.md` unless this worker lane forbids sibling edits
 3. If it's a new relationship, update `fleet-brain/docs/REPO-GRAPH.md` (or rebuild via `fleet graph build`)
 4. Commit with prefix `infra:` or `feat+infra:`
 

@@ -1,13 +1,13 @@
 # Agent Context — fleet-protocols
 
-> **Load this file FIRST before editing anything in this repo.** It's the 80-line primer that lets you skip loading 20 other files.
+> **Load this file FIRST before editing anything in this repo.** It's the compact primer that lets you skip loading 20 other files.
 >
-> **Last verified against live:** 2026-04-17
+> **Last verified against local build:** 2026-05-17
 > **Owner:** Jonah (human); fleet-brain-loader consumes content
 
 ## In 60 seconds
 
-This is **T4 — a framework / shared protocol library**. It contains 15+ injectable cognitive protocols for AI agents: BLOCKER-CHECK, SHIP-OR-SHAM, DATA-TRUST, PREFLIGHT, STALE-CHECK, SAMPLE-CHECK, BLAST-RADIUS, WORTH-IT, HONEST-REPORT, APPROACH-PICKER, OUTREACH-GATE, CONTEXT-HANDOFF, PARALLEL-SAFETY, ROOT-CAUSE, INJECTION-SNIPPET, and the PROTOCOL-INDEX (README.md) that routes agents to the right one. Every senate agent loads these via the `fleet-brain-loader` OpenClaw extension. Claude Code / Codex sessions load them via hook injection. Northstar Homebase reads `protocol_runs` in Supabase to render compliance dashboards. Protocols are NOT code — they are trigger-based cognitive checklists copy-pasted into agent context at runtime.
+This is **T4 — a framework / shared protocol library mirror**. It contains 15+ injectable cognitive protocols for AI agents: BLOCKER-CHECK, SHIP-OR-SHAM, DATA-TRUST, PREFLIGHT, STALE-CHECK, SAMPLE-CHECK, BLAST-RADIUS, WORTH-IT, HONEST-REPORT, APPROACH-PICKER, OUTREACH-GATE, CONTEXT-HANDOFF, PARALLEL-SAFETY, ROOT-CAUSE, INJECTION-SNIPPET, and the PROTOCOL-INDEX (README.md) that routes agents to the right one. `prompts/codex-phase-0-build.md` is the preferred local build brief for future Codex workers; `README.md` remains the fallback if that prompt is absent. `RELATIONSHIPS.md` currently defines the safe-default authority model: keep this repo as the agent-visible convenience mirror while `~/fleet-brain/protocols/` remains the source-of-truth path until Jonah/L1 picks a final path. Every senate agent loads protocols via the `fleet-brain-loader` OpenClaw extension. Claude Code / Codex sessions load them via hook injection. Northstar Homebase reads `protocol_runs` in Supabase to render compliance dashboards. Protocols are NOT code — they are trigger-based cognitive checklists copy-pasted into agent context at runtime.
 
 ## The critical invariants (DO NOT BREAK)
 
@@ -65,29 +65,26 @@ Agent action → protocol read → fn_log_* RPC → protocol_runs table → v_pr
 
 ## Known broken / pending
 
-- No known-broken protocols as of 2026-04-17. `PREFLIGHT-LEARNINGS.md` accumulates failure modes — read it before adding new protocols.
-- INJECTION-SNIPPET.md in repo is the canonical text injected by smart-proxy; changes there require a smart-proxy restart on VPS (`systemctl --user restart smart-proxy`).
+- No known-broken protocols as of 2026-05-17. `PREFLIGHT-LEARNINGS.md` accumulates failure modes -- read it before adding new protocols.
+- `INJECTION-SNIPPET.md` in this repo is the project-local mirror of the text injected by smart-proxy; changes there require L1-owned sync to the active source-of-truth path and a smart-proxy restart on VPS (`systemctl --user restart smart-proxy`).
 
 ## Session docs to read for context
 
-- `docs/sessions/` — freshly seeded by scaffold; populate as sessions happen
+- `docs/sessions/` — reserved for future project-local session notes; current worker history lives in `PROGRESS-2026-05-16.md`
 - External: `~/fleet-brain/protocols/` is the mirror/mount path; `~/fleet-brain/docs/PLAN-FLEET-NORMALIZATION-2026-04-18.md` for the rollout wave
 
 ## Cross-repo waves this participates in
 
-- Fleet normalization wave (fleet-brain 2026-04-18 plan) — this scaffold commit is part of that rollout
+- Fleet normalization wave (fleet-brain 2026-04-18 plan) — this repo's infra docs preserve that rollout context while the source-of-truth decision remains with L1
 - Protocol injection wave (2026-04-16) — five injection surfaces wired; ongoing
 
 ## Test command + expected output
 
 ```bash
-# Verify every protocol is under 80 lines
-for f in /Users/jonahaioperation/Jonah-Projects/fleet-protocols/*.md; do
-  lines=$(wc -l < "$f")
-  [ "$lines" -gt 80 ] && echo "OVER CAP: $f ($lines lines)"
-done
+cd /Users/jonahsnorthstar/Jonah-Projects/fleet-protocols
+bash scripts/local-build.sh
 ```
-Expected: no output (all protocols under cap). README.md is the one exception (it is the index, not a protocol).
+Expected: exits 0 and ends with `Local build passed.` The build checks the short-protocol line cap; `README.md` and `PREFLIGHT.md` are documented exceptions because they are the index and full final-gate protocol.
 
 ## Deploy command
 

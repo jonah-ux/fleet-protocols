@@ -2,12 +2,12 @@
 
 **Tier:** T4 (framework / shared protocol library)
 
-**Created:** 2026-04-17 (scaffold; repo itself predates)
-**Last reviewed:** 2026-04-17
+**Created:** 2026-04-17 (repo itself predates the infra-doc pass)
+**Last reviewed:** 2026-05-17
 
 ## Why it exists
 
-`fleet-protocols` is the canonical source of truth for the 15+ cognitive protocols that every ASM fleet agent loads before making significant decisions: BLOCKER-CHECK, SHIP-OR-SHAM, DATA-TRUST, PREFLIGHT, STALE-CHECK, SAMPLE-CHECK, BLAST-RADIUS, WORTH-IT, HONEST-REPORT, APPROACH-PICKER, OUTREACH-GATE, CONTEXT-HANDOFF, PARALLEL-SAFETY, ROOT-CAUSE, INJECTION-SNIPPET, plus the PROTOCOL-INDEX (README.md).
+`fleet-protocols` is the project-local, agent-visible mirror for the 15+ cognitive protocols that every ASM fleet agent loads before making significant decisions: BLOCKER-CHECK, SHIP-OR-SHAM, DATA-TRUST, PREFLIGHT, STALE-CHECK, SAMPLE-CHECK, BLAST-RADIUS, WORTH-IT, HONEST-REPORT, APPROACH-PICKER, OUTREACH-GATE, CONTEXT-HANDOFF, PARALLEL-SAFETY, ROOT-CAUSE, INJECTION-SNIPPET, plus the PROTOCOL-INDEX (README.md). Per `RELATIONSHIPS.md`, the safe default is that `~/fleet-brain/protocols/` remains the source-of-truth path until Jonah/L1 chooses whether to keep, merge, or promote this repository.
 
 If this repo disappeared:
 - Every senate agent would keep running but lose its cognitive guardrails — hallucinated blockers, unverified "done" claims, unchecked numbers, and silent bulk-op failures would compound. Historically these are the #1 source of Jonah-flagged failure modes.
@@ -25,7 +25,7 @@ If this repo disappeared:
 | vps | smart-proxy :3480 (INJECTION-SNIPPET.md text embedded) | `PROTOCOL_INJECTION=true` | runtime per-LLM-call injection |
 | m4/m5/vps | `~/.claude/hooks/session-end-protocol-check.sh` | SessionEnd hook | compliance verification |
 
-The canonical source is GitHub (`jonah-ux/fleet-protocols`). The fleet-brain mirror is synced manually when protocols change.
+The active source-of-truth path is `~/fleet-brain/protocols/` under the safe-default relationship model in `RELATIONSHIPS.md`. This repository is the convenience mirror and project-local validation surface until Jonah/L1 chooses a final source-of-truth path. GitHub publication and mirror sync remain L1-owned.
 
 ## Sync mechanism (T4 — framework)
 
@@ -93,4 +93,4 @@ Full list + paths in `related-repos.md`.
   - Northstar Homebase compliance dashboard (reads `v_protocol_compliance_live`)
   - `v_blocker_accuracy`, `v_protocol_usage`, `v_missing_preflights` — all surface in the compliance view
 - **GitHub:** `jonah-ux/fleet-protocols`
-- **Canonical local mirror:** `~/fleet-brain/protocols/` on every fleet node
+- **Current source-of-truth path:** `~/fleet-brain/protocols/` on every fleet node, pending L1 decision in `RELATIONSHIPS.md`

@@ -4,28 +4,18 @@
 
 ## Active deprecations (in the 30-day window)
 
-### `<artifact name>` — e.g., `asm_inbound_emails.gmail_thread_id` column
+None owned by this repository as of 2026-05-17.
 
-- **Deprecated:** 2026-04-18
-- **Reason:** Column renamed to `thread_id` to match poller payload (fleet-brain commit `0d07279`)
-- **Replacement:** Use `thread_id` instead
-- **Hard-delete by:** 2026-05-18
-- **Callers migrated:** <list or "all" or "none — was unused">
-- **Callers remaining:** <list>
+This repo is a protocol text library with no runtime-owned tables, crons, or processes. Any future protocol rename/removal must be listed here before the change ships because protocol names are fleet-wide public contracts.
 
 ## Hard-deleted (historical record)
 
-### `<artifact>`
-
-- **Originally deprecated:** `<date>`
-- **Hard-deleted:** `<date>`
-- **Reason:** `<why>`
-- **Where it went:** `<replacement or "removed, no replacement">`
+None recorded for this repository as of 2026-05-17.
 
 ## Deprecation checklist (follow for every new entry)
 
 - [ ] Entry added ABOVE code/file rename
-- [ ] Artifact renamed with timestamp marker (files: `.DEPRECATED-YYYYMMDD`, crons: `.JONAH-DISABLED-YYYYMMDDTHHMMSSZ`, tables: `_deprecated_<name>_YYYYMMDD`)
+- [ ] Artifact renamed with timestamp marker, for example `.DEPRECATED-YYYYMMDD`, `.JONAH-DISABLED-YYYYMMDDTHHMMSSZ`, or `_deprecated_artifact_YYYYMMDD`
 - [ ] All consumers identified via `related-repos.md` + fleet-wide grep
 - [ ] Consumers notified (issue in their repo, or direct edit)
 - [ ] Memory files mentioning this artifact get STALE banner
