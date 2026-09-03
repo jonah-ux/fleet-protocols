@@ -1,0 +1,26 @@
+{
+  "__comment": "Template for PM2 ecosystem config. Copy to ecosystem.config.js at repo root when needed. See fleet-brain/docs/CONVENTIONS.md for standards.",
+  "apps": [
+    {
+      "name": "<process-name>",
+      "script": "./scripts/<entry>.js",
+      "cwd": "__repo_root__",
+      "instances": 1,
+      "autorestart": true,
+      "max_restarts": 10,
+      "min_uptime": "30s",
+      "max_memory_restart": "256M",
+      "env": {
+        "NODE_ENV": "production",
+        "__comment_env": "Reference env-vars.md for complete list. NEVER hardcode values here."
+      },
+      "log_file": "/tmp/<process-name>.log",
+      "time": true,
+      "__observability": {
+        "sentry_project": "<slug>",
+        "agent_ops_logs_name": "<name used in agent_ops_logs.agent column>",
+        "alert_channel": "Fleet Alerts bot"
+      }
+    }
+  ]
+}
